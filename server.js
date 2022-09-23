@@ -6,19 +6,37 @@ const { shuffleArray } = require("./utils");
 
 app.use(express.json());
 
-app.use("/", express.static(path.join(__dirname, "/public")));
-app.use("/", express.static(path.join(__dirname, "/js")));
-app.use(
-  "/",
-  express.static(
-    path.join(__dirname, "https://unpkg.com/axios/dist/axios.min.js")
-  )
-);
+// include and initialize the rollbar library with your access token
+var Rollbar = require("rollbar");
+var rollbar = new Rollbar({
+  accessToken: "fa99795fae034ab59f237523abd4c025",
+  captureUncaught: true,
+  captureUnhandledRejections: true,
+});
+
+// record a generic message and send it to Rollbar
+rollbar.log("Hello world!");
+
+app.get("/", (req, res) => {
+  rollbar.log("HTML page loaded");
+  res.sendFile(path.join(__dirname, "/public/index.html"));
+});
+
+app.get("/styles", (req, res) => {
+  rollbar.log("CSS page loaded");
+  res.sendFile(path.join(__dirname, "/public/index.css"));
+});
+
+app.get("/js", (req, res) => {
+  rollbar.log("JS page loaded");
+  res.sendFile(path.join(__dirname, "/public/index.js"));
+});
 
 app.get("/api/robots", (req, res) => {
   try {
     res.status(200).send(botsArr);
   } catch (error) {
+    rollbar.error("Bots did not load");
     console.log("ERROR GETTING BOTS", error);
     res.sendStatus(400);
   }
